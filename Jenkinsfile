@@ -29,9 +29,24 @@ pipeline {
             }
             steps {
                 sh '''
-                echo "Test stage runnug"
                 test -f build/index.html
                 npm test
+                '''
+            }
+        }
+        stage('e2e') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.49.1-noble'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    npm install serve
+                    node_modules/.bin/serve -s build &
+                    sleep 20
+                    npx playwright test
                 '''
             }
         }
@@ -39,7 +54,7 @@ pipeline {
 
     post {
         always {
-            junit 'test-results/junit.xml'
+            junit 'junit-results/junit.xml'
         }
     }
 }
