@@ -87,6 +87,7 @@ pipeline {
                     env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true)
                 }
             }
+
         }
 
         stage('Staging e2e') {
@@ -116,25 +117,25 @@ pipeline {
                     input message: 'Do you wish to deploy to production?', ok: 'Yes, I am sure!'}  
             }
         }
-        stage('Deploy prod') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    npm install netlify-cli
-                    node_modules/.bin/netlify --version
-                    echo "Deploying to prod. Site ID: $NETLIFY_SITE_ID"
-                    node_modules/.bin/netlify status
-                    node_modules/.bin/netlify deploy --dir=build --prod
-                '''
-            }
-        }
+        // stage('Deploy prod') {
+        //     agent {
+        //         docker {
+        //             image 'node:18-alpine'
+        //             reuseNode true
+        //         }
+        //     }
+        //     steps {
+        //         sh '''
+        //             npm install netlify-cli
+        //             node_modules/.bin/netlify --version
+        //             echo "Deploying to prod. Site ID: $NETLIFY_SITE_ID"
+        //             node_modules/.bin/netlify status
+        //             node_modules/.bin/netlify deploy --dir=build --prod
+        //         '''
+        //     }
+        // }
 
-        stage('Prod e2e') {
+        stage('Deploy prod') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.49.1-noble'
@@ -146,6 +147,12 @@ pipeline {
             }
             steps {
                 sh '''
+                    node --version
+                    npm install netlify-cli
+                    node_modules/.bin/netlify --version
+                    echo "Deploying to prod. Site ID: $NETLIFY_SITE_ID"
+                    node_modules/.bin/netlify status
+                    node_modules/.bin/netlify deploy --dir=build --prod
                     npx playwright test --reporter=html
                 '''
             }
